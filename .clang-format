@@ -1,0 +1,70 @@
+# Основа стиля — Google (чистый, современный C/C++).
+# Вы можете сменить на LLVM, Chromium, WebKit, Microsoft.
+BasedOnStyle: Google
+
+# Отступы: 4 пробела (удобно для чтения и встраиваемых систем).
+# Многие embedded-команды предпочитают 4, но если хотите 2 или табы — меняйте.
+IndentWidth: 4
+TabWidth: 4
+UseTab: Always
+
+# Длина строки: 120 символов.
+# Для современных мониторов и читаемых комментариев — комфортно.
+ColumnLimit: 120
+
+# Перенос аргументов функций и параметров шаблонов.
+# Если строка не влезает — переносить все параметры на отдельные строки.
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+
+# Выравнивание указателей и ссылок — прижимать к типу (как в Google-стиле).
+PointerAlignment: Left
+ReferenceAlignment: Left
+
+# Разрывы перед фигурными скобками.
+BreakBeforeBraces: Attach   # Открывающая скобка на той же строке (K&R стиль).
+# Исключение: для функций скобку можно оставить на той же строке.
+# Attach — общий стиль "не переносить".
+
+# Пробелы внутри скобок.
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+SpacesInAngles: false       # В шаблонах: vector<int>, а не vector< int >
+
+# Отступы для case внутри switch (хорошо для читаемости).
+IndentCaseLabels: true
+
+# Сортировка директив #include.
+SortIncludes: true
+IncludeCategories:
+  # Сначала стандартные библиотеки (с < > или системные заголовки).
+  - Regex:           '^<.*\.h>'
+    Priority:        1
+  - Regex:           '^<.*>'
+    Priority:        2
+  # Затем локальные заголовки проекта (в кавычках).
+  - Regex:           '^".*"'
+    Priority:        3
+# Это оставляет порядок: сначала системные, потом наши.
+
+# Максимальное количество пустых строк подряд.
+MaxEmptyLinesToKeep: 1
+
+# Выравнивание в бинарных выражениях (не делаем, чтобы избежать странных сдвигов).
+AlignOperands: false
+
+# Перенос длинных строк с аргументами функций.
+AlignAfterOpenBracket: Align  # Аргументы под первым аргументом (более компактно).
+
+# Завершающая запятая в перечислениях (C++11 и выше).
+BreakConstructorInitializers: BeforeComma
+AllowAllConstructorInitializersOnNextLine: false
+AllowShortFunctionsOnASingleLine: None   # Не позволяем короткие функции в одну строку (читаемость).
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+
+# Пробел перед скобками в управляющих конструкциях.
+SpaceBeforeParens: ControlStatements   # if (x) — пробел после if, for, while.
+
+# Комментарии.
+ReflowComments: false  # Не переформатировать комментарии (сохраняет форматирование).

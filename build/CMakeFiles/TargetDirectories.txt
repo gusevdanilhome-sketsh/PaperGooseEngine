@@ -1,0 +1,3 @@
+C:/Project/PaperGooseEngine/build/CMakeFiles/atomy_engine.dir
+C:/Project/PaperGooseEngine/build/CMakeFiles/edit_cache.dir
+C:/Project/PaperGooseEngine/build/CMakeFiles/rebuild_cache.dir
