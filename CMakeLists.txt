@@ -29,7 +29,9 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     set(CMAKE_C_FLAGS_RELEASE "-O3")
     # Статическая линковка runtime (MinGW)
     if(MINGW)
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static-libgcc")
+        # Полная статическая линковка runtime и всех библиотек
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static-libgcc -static-libstdc++")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
     endif()
 endif()
 
