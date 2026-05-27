@@ -1,0 +1,47 @@
+# Артефакты сборки
+build/
+cmake-build-*/
+out/
+Debug/
+Release/
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.a
+*.lib
+*.exp
+*.pdb
+*.ilk
+
+# CMake
+CMakeUserPresets.json
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+compile_commands.json
+
+# IDE и редакторы
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Артефакты Vulkan-шейдеров (spv, если генерируются)
+*.spv
+
+# Временные файлы редактора (на всякий случай)
+*.autosave
+*_backup.*
+
+# Логи
+*.log
+
+# Игнорируем скомпилированные ресурсы (если будут)
+assets/*.bin
+assets/*.dat
