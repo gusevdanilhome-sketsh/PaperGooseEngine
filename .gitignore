@@ -25,7 +25,6 @@ compile_commands.json
 
 # IDE и редакторы
 .idea/
-.vscode/
 *.swp
 *.swo
 *~
