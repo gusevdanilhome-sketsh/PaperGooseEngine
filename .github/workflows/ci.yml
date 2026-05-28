@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            cmake_generator: "Unix Makefiles"
+            cmake_build_type: Debug
+          - os: windows-latest
+            cmake_generator: "MinGW Makefiles"
+            cmake_build_type: Debug
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout репозитория
+        uses: actions/checkout@v4
+        with:
+          submodules: true  # Загружает GLFW из external/glfw
+
+      # --- Linux -----------------------------------------------------------
+      - name: Установка зависимостей (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake
+
+      - name: Конфигурация CMake (Linux)
+        if: runner.os == 'Linux'
+        run: cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} -DUSE_VULKAN=OFF
+
+      - name: Сборка (Linux)
+        if: runner.os == 'Linux'
+        run: cmake --build build
+
+      # --- Windows ---------------------------------------------------------
+      - name: Установка MSYS2 (Windows)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-make
+
+      - name: Конфигурация CMake (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: cmake -B build -G "${{ matrix.cmake_generator }}" -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} -DUSE_VULKAN=OFF
+
+      - name: Сборка (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: cmake --build build
+
+      # --- Тесты (общий шаг) -----------------------------------------------
+      - name: Запуск тестов
+        run: cd build && ctest --output-on-failure
