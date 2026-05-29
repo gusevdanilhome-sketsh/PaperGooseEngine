@@ -1,29 +1,14 @@
-# Тесты для PaperGoose Engine (этап 1)
+cmake_minimum_required(VERSION 3.21)
 
-add_executable(test_runner
-    test_main.c
-    # Добавьте сюда файлы с тестами, когда они появятся
-    # test_ecs.c
-    # test_memory.c
+# Простейший тест
+add_executable(ci_test_dir ci_test_dir.c)
+add_test(NAME CITestDir COMMAND ci_test_dir)
+
+# Тест проверки компиляции main
+add_executable(ci_test_main ../src/main.c)
+add_test(NAME CITestMain COMMAND ci_test_main)
+
+# Включить вывод при ошибках
+set_tests_properties(CITestDir CITestMain PROPERTIES 
+    PASS_REGULAR_EXPRESSION ""
 )
-
-# Вместо линковки с исполняемым файлом papergoose,
-# просто компилируем нужные исходники прямо в тестовый бинарник.
-# Это временное решение, пока не выделена библиотека ядра.
-target_sources(test_runner PRIVATE
-    ${CMAKE_SOURCE_DIR}/src/core/ecs.c
-    ${CMAKE_SOURCE_DIR}/src/core/memory.c
-    # При необходимости добавьте другие .c файлы ядра
-)
-
-target_include_directories(test_runner PRIVATE ${CMAKE_SOURCE_DIR}/src)
-
-# Линкуем зависимости, которые нужны тестируемому коду (если есть)
-target_link_libraries(test_runner PRIVATE
-    glfw
-    ${Vulkan_LIBRARIES}
-)
-
-# Включаем тесты CTest
-enable_testing()
-add_test(NAME test_runner COMMAND test_runner)

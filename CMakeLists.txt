@@ -40,7 +40,12 @@ add_executable(papergoose
     ${SOURCES}
 )
 
-# 5. Информационное сообщение
+# 5. Подключение тестов
+enable_testing()
+add_subdirectory(tests)
+
+# 6. Информационное сообщение
 message(STATUS "PaperGoose ${PROJECT_VERSION} настроена:")
 message(STATUS "    Компилятор: ${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION}")
 message(STATUS "    Стандарт C: C${CMAKE_C_STANDARD}")
+message(STATUS "    Тесты: включены")
