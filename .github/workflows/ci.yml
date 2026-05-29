@@ -3,25 +3,52 @@ name: CI
 on:
   push:
     branches: [Dev]
+  pull_request:
+    branches: [Dev]
 
 jobs:
   build:
     strategy:
       matrix:
         include:
+          # Windows сборка
           - os: windows-latest
             cmake_generator: "MinGW Makefiles"
             cmake_build_type: Debug
+            c_compiler: gcc
+            
+          # Linux сборка (GCC)
+          - os: ubuntu-latest
+            cmake_generator: "Unix Makefiles"
+            cmake_build_type: Debug
+            c_compiler: gcc
+            
+          # Linux сборка (Clang - опционально)
+          - os: ubuntu-latest
+            cmake_generator: "Unix Makefiles"
+            cmake_build_type: Debug
+            c_compiler: clang
 
     runs-on: ${{ matrix.os }}
-
+    
     steps:
       - name: Checkout репозитория
         uses: actions/checkout@v4
         with:
           submodules: true
 
-      # --- Windows ---------------------------------------------------------
+      # --- Linux установка зависимостей ------------------------------------
+      - name: Установка зависимостей (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            gcc \
+            clang
+
+      # --- Windows установка MSYS2 -----------------------------------------
       - name: Установка MSYS2 (Windows)
         if: runner.os == 'Windows'
         uses: msys2/setup-msys2@v2
@@ -33,6 +60,7 @@ jobs:
             mingw-w64-x86_64-cmake
             mingw-w64-x86_64-make
 
+      # --- Конфигурация CMake (Windows) ------------------------------------
       - name: Конфигурация CMake (Windows)
         if: runner.os == 'Windows'
         shell: msys2 {0}
@@ -41,11 +69,26 @@ jobs:
             -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} \
             -DCMAKE_C_COMPILER=gcc
 
+      # --- Конфигурация CMake (Linux) --------------------------------------
+      - name: Конфигурация CMake (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cmake -B build -G "${{ matrix.cmake_generator }}" \
+            -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} \
+            -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+
+      # --- Сборка (Windows) ------------------------------------------------
       - name: Сборка (Windows)
         if: runner.os == 'Windows'
         shell: msys2 {0}
         run: cmake --build build --config ${{ matrix.cmake_build_type }} -j $(nproc)
 
+      # --- Сборка (Linux) --------------------------------------------------
+      - name: Сборка (Linux)
+        if: runner.os == 'Linux'
+        run: cmake --build build --config ${{ matrix.cmake_build_type }} -j $(nproc)
+
+      # --- Загрузка артефактов (Windows) -----------------------------------
       - name: Загрузка артефактов (Windows)
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
@@ -55,3 +98,31 @@ jobs:
             build/papergoose.exe
             build/*.dll
           if-no-files-found: error
+
+      # --- Загрузка артефактов (Linux) -------------------------------------
+      - name: Загрузка артефактов (Linux)
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: papergoose-linux-${{ matrix.cmake_build_type }}-${{ matrix.c_compiler }}
+          path: |
+            build/papergoose
+          if-no-files-found: error
+
+      # --- Запуск тестов (опционально) -------------------------------------
+      - name: Запуск тестов (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cd build
+          if [ -f papergoose ]; then
+            echo "Бинарный файл создан успешно"
+          fi
+
+      - name: Запуск тестов (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          cd build
+          if [ -f papergoose.exe ]; then
+            echo "Бинарный файл создан успешно"
+          fi
