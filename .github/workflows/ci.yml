@@ -99,3 +99,17 @@ jobs:
           path: |
             build/papergoose
           if-no-files-found: error
+
+      - name: Запуск тестов (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        working-directory: build
+        run: |
+          # Запуск всех тестов через CTest
+          ctest -C ${{ matrix.cmake_build_type }} --output-on-failure --verbose
+
+      - name: Запуск тестов (Linux)
+        if: runner.os == 'Linux'
+        working-directory: build
+        run: |
+          ctest -C ${{ matrix.cmake_build_type }} --output-on-failure --verbose
