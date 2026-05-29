@@ -1,49 +1,34 @@
-name: CI
+name: CI  # Название workflow, отображается в GitHub Actions
 
 on:
   push:
-    branches: [main, develop]
+    branches: [Dev]
   pull_request:
-    branches: [main]
+    branches: [Dev]
 
 jobs:
   build:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
-            cmake_generator: "Unix Makefiles"
-            cmake_build_type: Debug
-          - os: windows-latest
+          - os: windows-latest  # Windows сборка
             cmake_generator: "MinGW Makefiles"
             cmake_build_type: Debug
+
+          - os: ubuntu-latest # Linux сборка
+            cmake_generator: "Unix Makefiles"
+            cmake_build_type: Debug
+            c_compiler: gcc
+
     runs-on: ${{ matrix.os }}
+    
     steps:
       - name: Checkout репозитория
         uses: actions/checkout@v4
         with:
           submodules: true
 
-      # --- Linux -----------------------------------------------------------
-      - name: Установка зависимостей (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential cmake \
-          libwayland-dev wayland-scanner \
-          libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev \
-          libxkbcommon-dev
-
-      - name: Конфигурация CMake (Linux)
-        if: runner.os == 'Linux'
-        run: cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} -DUSE_VULKAN=OFF
-
-      - name: Сборка (Linux)
-        if: runner.os == 'Linux'
-        run: cmake --build build
-
-      # --- Windows ---------------------------------------------------------
-      - name: Установка MSYS2 (Windows)
+      - name: Установка зависимостей (Windows)
         if: runner.os == 'Windows'
         uses: msys2/setup-msys2@v2
         with:
@@ -54,16 +39,54 @@ jobs:
             mingw-w64-x86_64-cmake
             mingw-w64-x86_64-make
 
+      - name: Установка зависимостей (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            gcc
+
       - name: Конфигурация CMake (Windows)
         if: runner.os == 'Windows'
         shell: msys2 {0}
-        run: cmake -B build -G "${{ matrix.cmake_generator }}" -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} -DUSE_VULKAN=OFF
+        run: |
+          cmake -B build -G "${{ matrix.cmake_generator }}" \
+            -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} \
+            -DCMAKE_C_COMPILER=gcc
+
+      - name: Конфигурация CMake (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cmake -B build -G "${{ matrix.cmake_generator }}" \
+            -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} \
+            -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
 
       - name: Сборка (Windows)
         if: runner.os == 'Windows'
         shell: msys2 {0}
-        run: cmake --build build
+        run: cmake --build build --config ${{ matrix.cmake_build_type }} -j $(nproc)
 
-      # --- Тесты -----------------------------------------------------------
-      - name: Запуск тестов
-        run: cd build && ctest --output-on-failure
+      - name: Сборка (Linux)
+        if: runner.os == 'Linux'
+        run: cmake --build build --config ${{ matrix.cmake_build_type }} -j $(nproc)
+
+      - name: Загрузка артефактов (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: papergoose-windows-${{ matrix.cmake_build_type }}
+          path: |
+            build/papergoose.exe
+            build/*.dll
+          if-no-files-found: error
+
+      - name: Загрузка артефактов (Linux)
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: papergoose-linux-${{ matrix.cmake_build_type }}-${{ matrix.c_compiler }}
+          path: |
+            build/papergoose
+          if-no-files-found: error
