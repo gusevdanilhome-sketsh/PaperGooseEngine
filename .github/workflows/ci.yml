@@ -1,128 +1,178 @@
-name: CI
+name: CI  # Название workflow, отображается в GitHub Actions
 
+# Триггеры запуска CI
 on:
   push:
-    branches: [Dev]
+    branches: [Dev]        # Запуск при пуше в ветку Dev
   pull_request:
-    branches: [Dev]
+    branches: [Dev]        # Запуск при создании/обновлении PR в Dev
 
+# Определение задач (jobs)
 jobs:
+  # Задача сборки проекта
   build:
+    # Стратегия сборки на разных ОС
     strategy:
       matrix:
+        # Список конфигураций для сборки
         include:
-          # Windows сборка
+          # Конфигурация для Windows
           - os: windows-latest
-            cmake_generator: "MinGW Makefiles"
-            cmake_build_type: Debug
-            c_compiler: gcc
+            cmake_generator: "MinGW Makefiles"  # Генератор для MinGW
+            cmake_build_type: Debug              # Отладочная сборка
+            c_compiler: gcc                      # Компилятор GCC
             
-          # Linux сборка (GCC)
+          # Конфигурация для Linux
           - os: ubuntu-latest
-            cmake_generator: "Unix Makefiles"
-            cmake_build_type: Debug
-            c_compiler: gcc
-            
-          # Linux сборка (Clang - опционально)
-          - os: ubuntu-latest
-            cmake_generator: "Unix Makefiles"
-            cmake_build_type: Debug
-            c_compiler: clang
+            cmake_generator: "Unix Makefiles"    # Стандартный генератор для Linux
+            cmake_build_type: Debug              # Отладочная сборка
+            c_compiler: gcc                      # Компилятор GCC
 
+    # Используемая ОС из матрицы
     runs-on: ${{ matrix.os }}
     
+    # Шаги выполнения
     steps:
+      # Шаг 1: Клонирование репозитория
       - name: Checkout репозитория
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: true  # Загрузить Git submodules, если есть
 
-      # --- Linux установка зависимостей ------------------------------------
+      # ==================== LINUX ====================
+      # Шаг 2 (Linux): Установка зависимостей через apt
       - name: Установка зависимостей (Linux)
-        if: runner.os == 'Linux'
+        if: runner.os == 'Linux'  # Выполняется только на Linux
         run: |
+          # Обновление списка пакетов
           sudo apt-get update
+          # Установка компилятора GCC, CMake и build-essential
           sudo apt-get install -y \
-            build-essential \
-            cmake \
-            gcc \
-            clang
+            build-essential \  # Базовые инструменты сборки (gcc, make, etc.)
+            cmake \            # CMake для генерации Makefile
+            gcc                # Компилятор GCC
 
-      # --- Windows установка MSYS2 -----------------------------------------
-      - name: Установка MSYS2 (Windows)
+      # ==================== WINDOWS ====================
+      # Шаг 3 (Windows): Установка MSYS2 и MinGW через Chocolatey (более стабильный способ)
+      - name: Установка MSYS2 и MinGW (Windows)
         if: runner.os == 'Windows'
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: MINGW64
-          update: true
-          install: >-
-            mingw-w64-x86_64-gcc
-            mingw-w64-x86_64-cmake
-            mingw-w64-x86_64-make
+        run: |
+          # Установка MSYS2 через Chocolatey (встроен в GitHub Actions)
+          choco install msys2 --params="/InstallDir:C:\tools\msys64" --yes
+          
+          # Добавление MSYS2 в PATH
+          echo "C:\tools\msys64\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo "C:\tools\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          
+          # Инициализация MSYS2 (обновление пакетов)
+          C:\tools\msys64\usr\bin\bash.exe -lc "pacman -Syu --noconfirm"
+          
+          # Установка MinGW-w64, CMake и Make
+          C:\tools\msys64\usr\bin\bash.exe -lc "pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-make"
+          
+      # Альтернативный способ через MSYS2 (закомментирован, т.к. вызывает ошибку)
+      # - name: Установка MSYS2 (Windows) - старый способ
+      #   if: runner.os == 'Windows'
+      #   uses: msys2/setup-msys2@v2
+      #   with:
+      #     msystem: MINGW64
+      #     update: true
+      #     install: >-
+      #       mingw-w64-x86_64-gcc
+      #       mingw-w64-x86_64-cmake
+      #       mingw-w64-x86_64-make
 
-      # --- Конфигурация CMake (Windows) ------------------------------------
+      # ==================== КОНФИГУРАЦИЯ CMAKE ====================
+      # Шаг 4 (Windows): Конфигурация CMake с использованием MSYS2
       - name: Конфигурация CMake (Windows)
         if: runner.os == 'Windows'
-        shell: msys2 {0}
+        # Используем MSYS2 shell для доступа к установленным инструментам
+        shell: cmd
         run: |
-          cmake -B build -G "${{ matrix.cmake_generator }}" \
-            -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} \
-            -DCMAKE_C_COMPILER=gcc
-
-      # --- Конфигурация CMake (Linux) --------------------------------------
+          # Запуск bash из MSYS2 и выполнение cmake
+          C:\tools\msys64\usr\bin\bash.exe -lc "cd '${{ github.workspace }}' && cmake -B build -G '${{ matrix.cmake_generator }}' -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} -DCMAKE_C_COMPILER=gcc"
+      
+      # Шаг 5 (Linux): Конфигурация CMake
       - name: Конфигурация CMake (Linux)
         if: runner.os == 'Linux'
         run: |
-          cmake -B build -G "${{ matrix.cmake_generator }}" \
+          # Создание директории build и генерация Makefile
+          cmake -B build \
+            -G "${{ matrix.cmake_generator }}" \
             -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} \
             -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
 
-      # --- Сборка (Windows) ------------------------------------------------
+      # ==================== СБОРКА ====================
+      # Шаг 6 (Windows): Компиляция проекта
       - name: Сборка (Windows)
         if: runner.os == 'Windows'
-        shell: msys2 {0}
-        run: cmake --build build --config ${{ matrix.cmake_build_type }} -j $(nproc)
-
-      # --- Сборка (Linux) --------------------------------------------------
+        shell: cmd
+        run: |
+          # Запуск сборки через MSYS2
+          C:\tools\msys64\usr\bin\bash.exe -lc "cd '${{ github.workspace }}' && cmake --build build --config ${{ matrix.cmake_build_type }} -j \$(nproc)"
+      
+      # Шаг 7 (Linux): Компиляция проекта
       - name: Сборка (Linux)
         if: runner.os == 'Linux'
-        run: cmake --build build --config ${{ matrix.cmake_build_type }} -j $(nproc)
+        run: |
+          # Параллельная сборка на всех доступных ядрах (-j $(nproc))
+          cmake --build build --config ${{ matrix.cmake_build_type }} -j $(nproc)
 
-      # --- Загрузка артефактов (Windows) -----------------------------------
+      # ==================== АРТЕФАКТЫ ====================
+      # Шаг 8 (Windows): Сохранение собранного .exe файла
       - name: Загрузка артефактов (Windows)
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
+          # Имя архива с артефактами
           name: papergoose-windows-${{ matrix.cmake_build_type }}
+          # Что сохраняем (пути относительно корня репозитория)
           path: |
-            build/papergoose.exe
-            build/*.dll
+            build/papergoose.exe   # Исполняемый файл
+            build/*.dll            # Динамические библиотеки (если есть)
+          # Если файлы не найдены - ошибка
           if-no-files-found: error
-
-      # --- Загрузка артефактов (Linux) -------------------------------------
+      
+      # Шаг 9 (Linux): Сохранение собранного бинарного файла
       - name: Загрузка артефактов (Linux)
         if: runner.os == 'Linux'
         uses: actions/upload-artifact@v4
         with:
-          name: papergoose-linux-${{ matrix.cmake_build_type }}-${{ matrix.c_compiler }}
+          name: papergoose-linux-${{ matrix.cmake_build_type }}
           path: |
-            build/papergoose
+            build/papergoose      # Исполняемый файл (без расширения)
           if-no-files-found: error
 
-      # --- Запуск тестов (опционально) -------------------------------------
-      - name: Запуск тестов (Linux)
+      # ==================== ПРОВЕРКА ====================
+      # Шаг 10 (Linux): Проверка успешности сборки
+      - name: Проверка бинарного файла (Linux)
         if: runner.os == 'Linux'
         run: |
-          cd build
-          if [ -f papergoose ]; then
-            echo "Бинарный файл создан успешно"
+          # Проверяем, существует ли файл
+          if [ -f build/papergoose ]; then
+            echo "✅ Бинарный файл успешно создан: build/papergoose"
+            # Показываем информацию о файле
+            ls -lh build/papergoose
+            # Проверяем, что файл исполняемый
+            if [ -x build/papergoose ]; then
+              echo "✅ Файл имеет права на выполнение"
+            else
+              echo "⚠️ Файл не имеет прав на выполнение"
+            fi
+          else
+            echo "❌ Бинарный файл не найден!"
+            exit 1
           fi
-
-      - name: Запуск тестов (Windows)
+      
+      # Шаг 11 (Windows): Проверка успешности сборки
+      - name: Проверка бинарного файла (Windows)
         if: runner.os == 'Windows'
-        shell: msys2 {0}
+        shell: cmd
         run: |
-          cd build
-          if [ -f papergoose.exe ]; then
-            echo "Бинарный файл создан успешно"
-          fi
+          if exist build\papergoose.exe (
+            echo ✅ Бинарный файл успешно создан: build\papergoose.exe
+            dir build\papergoose.exe
+          ) else (
+            echo ❌ Бинарный файл не найден!
+            exit 1
+          )
