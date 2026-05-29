@@ -1,4 +1,4 @@
-name: CI  # Название workflow, отображается в GitHub Actions
+name: CI
 
 on:
   push:
@@ -11,23 +11,14 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: windows-latest  # Windows Debug сборка
-            cmake_generator: "MinGW Makefiles"
-            cmake_build_type: Debug
-
-          - os: windows-latest  # Windows Release сборка
-            cmake_generator: "MinGW Makefiles"
-            cmake_build_type: Release
-
-          - os: ubuntu-latest # Linux Debug сборка
-            cmake_generator: "Unix Makefiles"
-            cmake_build_type: Debug
-            c_compiler: gcc
-
-          - os: ubuntu-latest # Linux Release сборка
-            cmake_generator: "Unix Makefiles"
-            cmake_build_type: Release
-            c_compiler: gcc
+          - os: windows-latest
+            build_type: Debug
+          - os: windows-latest
+            build_type: Release
+          - os: ubuntu-latest
+            build_type: Debug
+          - os: ubuntu-latest
+            build_type: Release
 
     runs-on: ${{ matrix.os }}
     
@@ -47,69 +38,40 @@ jobs:
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-cmake
             mingw-w64-x86_64-make
+            mingw-w64-x86_64-vulkan-headers
+            mingw-w64-x86_64-vulkan-loader
 
       - name: Установка зависимостей (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            cmake \
-            gcc
+          sudo apt-get install -y build-essential cmake libvulkan-dev
 
-      - name: Конфигурация CMake (Windows)
-        if: runner.os == 'Windows'
-        shell: msys2 {0}
+      - name: Конфигурация CMake
+        shell: bash
         run: |
-          cmake -B build -G "${{ matrix.cmake_generator }}" \
-            -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} \
-            -DCMAKE_C_COMPILER=gcc
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            cmake -B build -G "MinGW Makefiles" \
+              -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+              -DUSE_VULKAN=ON
+          else
+            cmake -B build \
+              -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+              -DUSE_VULKAN=ON
+          fi
 
-      - name: Конфигурация CMake (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          cmake -B build -G "${{ matrix.cmake_generator }}" \
-            -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} \
-            -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+      - name: Сборка
+        run: cmake --build build --config ${{ matrix.build_type }} -j $(nproc)
 
-      - name: Сборка (Windows)
-        if: runner.os == 'Windows'
-        shell: msys2 {0}
-        run: cmake --build build --config ${{ matrix.cmake_build_type }} -j $(nproc)
+      - name: Запуск тестов
+        if: matrix.build_type == 'Debug'
+        working-directory: build
+        run: ctest --output-on-failure
 
-      - name: Сборка (Linux)
-        if: runner.os == 'Linux'
-        run: cmake --build build --config ${{ matrix.cmake_build_type }} -j $(nproc)
-
-      - name: Загрузка артефактов (Windows)
-        if: runner.os == 'Windows'
+      - name: Загрузка артефактов
         uses: actions/upload-artifact@v4
         with:
-          name: papergoose-windows-${{ matrix.cmake_build_type }}
+          name: papergoose-${{ runner.os }}-${{ matrix.build_type }}
           path: |
-            build/papergoose.exe
-            build/*.dll
-          if-no-files-found: error
-
-      - name: Загрузка артефактов (Linux)
-        if: runner.os == 'Linux'
-        uses: actions/upload-artifact@v4
-        with:
-          name: papergoose-linux-${{ matrix.cmake_build_type }}-${{ matrix.c_compiler }}
-          path: |
-            build/papergoose
-          if-no-files-found: error
-
-      - name: Запуск тестов (Windows)
-        if: runner.os == 'Windows'
-        shell: msys2 {0}
-        working-directory: build
-        run: |
-          # Запуск всех тестов через CTest
-          ctest -C ${{ matrix.cmake_build_type }} --output-on-failure --verbose
-
-      - name: Запуск тестов (Linux)
-        if: runner.os == 'Linux'
-        working-directory: build
-        run: |
-          ctest -C ${{ matrix.cmake_build_type }} --output-on-failure --verbose
+            build/papergoose*
+            build/*.exe
