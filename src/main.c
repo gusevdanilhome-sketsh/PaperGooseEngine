@@ -9,7 +9,6 @@
 
 int main() {
 	printf("PaperGoose Engine v0.1.0\n");
-	printf("========================\n\n");
 
 #ifdef USE_VULKAN
 #if USE_VULKAN
@@ -25,14 +24,14 @@ int main() {
 
 	VkInstanceCreateInfo createInfo = {.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO, .pApplicationInfo = &appInfo};
 
-	VkInstance instance;
+	VkInstance instance = 0;
 	VkResult result = vkCreateInstance(&createInfo, NULL, &instance);
 
 	if (result == VK_SUCCESS) {
-		printf("✓ Vulkan instance created successfully!\n");
+		printf("Vulkan instance created successfully!\n");
 		vkDestroyInstance(instance, NULL);
 	} else {
-		printf("✗ Failed to create Vulkan instance. Error code: %d\n", result);
+		printf("Failed to create Vulkan instance. Error code: %d\n", result);
 		return 1;
 	}
 #else
@@ -42,6 +41,6 @@ int main() {
 	printf("USE_VULKAN macro not defined\n");
 #endif
 
-	printf("\n✓ PaperGoose engine started successfully!\n");
+	printf("\n PaperGoose engine started successfully!\n");
 	return 0;
 }
