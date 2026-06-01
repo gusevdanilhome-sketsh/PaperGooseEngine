@@ -32,6 +32,7 @@ compile_commands.json
 Thumbs.db
 
 # Артефакты Vulkan-шейдеров (spv, если генерируются)
+external/vulkan/
 *.spv
 
 # Временные файлы редактора (на всякий случай)

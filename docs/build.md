@@ -112,3 +112,55 @@ vulkaninfo
 - CMake не находит Vulkan — укажите путь к Vulkan SDK вручную через переменную VULKAN_SDK или добавьте флаг -DVulkan_INCLUDE_DIR=... -DVulkan_LIBRARY=....
 - Ошибка линковки GLFW — удалите папку build, затем заново выполните cmake ... Убедитесь, что подмодуль external/glfw инициализирован (git submodule update --init).
 - Предупреждения при сборке — не мешают работе, это нормальное поведение для стороннего кода (GLFW). Ошибки компиляции (-Werror) применяются только к исходникам движка.
+
+## Установка Vulkan SDK в папку external/
+Для ручной установки Vulkan SDK в папку `external/` выполните:
+
+### Windows:
+```bash
+# Скачайте Vulkan SDK с https://vulkan.lunarg.com/
+# Установите в папку external/vulkan
+# Или используйте скрипт:
+./scripts/setup_vulkan_win.bat
+```
+
+### Linux:
+```bash
+# Сделайте скрипт исполняемым
+chmod +x scripts/setup_vulkan_linux.sh
+# Запустите установку
+./scripts/setup_vulkan_linux.sh
+```
+
+### Проверка Vulkan:
+```bash
+vulkaninfo
+```
+
+## Быстрая установка всех зависимостей
+### Windows (MSYS2 MinGW64):
+```bash
+./scripts/setup_win.bat
+```
+
+### Linux:
+```bash
+chmod +x scripts/setup_linux.sh
+./scripts/setup_linux.sh
+```
+
+## Тестирование сборки с Vulkan
+```bash
+# Конфигурация с Vulkan
+cmake -B build -G "MinGW Makefiles" -DUSE_VULKAN=ON
+
+# Сборка
+cmake --build build
+
+# Запуск
+./build/papergoose.exe
+
+# Конфигурация без Vulkan (software renderer)
+cmake -B build -G "MinGW Makefiles" -DUSE_VULKAN=OFF
+cmake --build build
+```

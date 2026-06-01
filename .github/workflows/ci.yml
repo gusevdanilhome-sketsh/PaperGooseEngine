@@ -1,101 +1,113 @@
-name: CI  # Название workflow, отображается в GitHub Actions
+name: CI  # Название workflow, отображается в интерфейсе GitHub
 
-on:
+on: # Триггеры запуска:
   push:
-    branches: [Dev]
+    branches: [Dev] # Запуск при пуше в ветку Dev
   pull_request:
-    branches: [Dev]
+    branches: [Dev] # Запуск при создании/обновлении Pull Request в Dev
 
-jobs:
-  build:
-    strategy:
+jobs: # Описание jobs (задач):
+  build:  # Job для сборки проекта
+    strategy: # Стратегия матрицы - запускает несколько параллельных сборок
       matrix:
         include:
           - os: windows-latest  # Windows Debug сборка
+            build_type: Debug
             cmake_generator: "MinGW Makefiles"
-            cmake_build_type: Debug
-
-          - os: windows-latest  # Windows Release сборка
+            c_compiler: gcc
+          
+          - os: windows-latest  # Windows Release сборка  
+            build_type: Release
             cmake_generator: "MinGW Makefiles"
-            cmake_build_type: Release
-
+            c_compiler: gcc
+          
           - os: ubuntu-latest # Linux Debug сборка
+            build_type: Debug
             cmake_generator: "Unix Makefiles"
-            cmake_build_type: Debug
             c_compiler: gcc
-
+          
           - os: ubuntu-latest # Linux Release сборка
+            build_type: Release
             cmake_generator: "Unix Makefiles"
-            cmake_build_type: Release
             c_compiler: gcc
 
-    runs-on: ${{ matrix.os }}
-    
-    steps:
-      - name: Checkout репозитория
-        uses: actions/checkout@v4
-        with:
-          submodules: true
+    runs-on: ${{ matrix.os }} # На каком виртуальном сервере запускать
 
-      - name: Установка зависимостей (Windows)
-        if: runner.os == 'Windows'
-        uses: msys2/setup-msys2@v2
+    steps:  # Шаги выполнения:
+      - name: Checkout репозитория  # Клонирование репозитория
+        uses: actions/checkout@v4  # GitHub Action для клонирования кода
         with:
-          msystem: MINGW64
-          update: true
-          install: >-
+          submodules: true  # Клонировать также Git submodules (GLFW, Chipmunk и т.д.)
+
+      - name: Установка зависимостей (Windows)  # Установка зависимостей для Windows
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2  # Официальный Action для настройки MSYS2
+        with:
+          msystem: MINGW64  # Использовать MinGW 64-bit окружение
+          update: true  # Обновить пакеты перед установкой
+          install: >-  # Список пакетов для установки
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-cmake
             mingw-w64-x86_64-make
+            mingw-w64-x86_64-vulkan-headers
+            mingw-w64-x86_64-vulkan-loader
 
-      - name: Установка зависимостей (Linux)
+      - name: Установка зависимостей (Linux)  # Установка зависимостей для Linux
         if: runner.os == 'Linux'
-        run: |
+        run: |  # Многострочная команда
           sudo apt-get update
           sudo apt-get install -y \
             build-essential \
             cmake \
+            libvulkan-dev \
             gcc
 
-      - name: Конфигурация CMake (Windows)
+      - name: Конфигурация CMake (Windows)  # Конфигурация CMake для Windows
+        if: runner.os == 'Windows'
+        shell: msys2 {0}  # Выполнять в окружении MSYS2 (подставляет путь к bash)
+        run: |
+          cmake -B build -G "${{ matrix.cmake_generator }}" \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
+            -DUSE_VULKAN=ON
+
+      - name: Конфигурация CMake (Linux)  # Конфигурация CMake для Linux
+        if: runner.os == 'Linux'
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
+            -DUSE_VULKAN=ON
+
+      - name: Сборка (Windows)  # Сборка проекта (Windows)
         if: runner.os == 'Windows'
         shell: msys2 {0}
         run: |
-          cmake -B build -G "${{ matrix.cmake_generator }}" \
-            -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} \
-            -DCMAKE_C_COMPILER=gcc
+          # Сборка проекта
+          # --build build : использовать папку build
+          # --config ${{ matrix.build_type }} : тип сборки
+          # -j $(nproc) : параллельная сборка (количество ядер CPU)
+          cmake --build build --config ${{ matrix.build_type }} -j $(nproc)
 
-      - name: Конфигурация CMake (Linux)
+      - name: Сборка (Linux)  # Сборка проекта (Linux)
         if: runner.os == 'Linux'
         run: |
-          cmake -B build -G "${{ matrix.cmake_generator }}" \
-            -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} \
-            -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+          cmake --build build --config ${{ matrix.build_type }} -j $(nproc)
 
-      - name: Сборка (Windows)
+      - name: Загрузка артефактов (Windows) # Загрузка артефактов сборки (Windows)
         if: runner.os == 'Windows'
-        shell: msys2 {0}
-        run: cmake --build build --config ${{ matrix.cmake_build_type }} -j $(nproc)
-
-      - name: Сборка (Linux)
-        if: runner.os == 'Linux'
-        run: cmake --build build --config ${{ matrix.cmake_build_type }} -j $(nproc)
-
-      - name: Загрузка артефактов (Windows)
-        if: runner.os == 'Windows'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4  # GitHub Action для загрузки файлов
         with:
-          name: papergoose-windows-${{ matrix.cmake_build_type }}
-          path: |
+          name: papergoose-${{ runner.os }}-${{ matrix.build_type }}  # Имя архива: papergoose-windows-Debug или papergoose-windows-Release
+          path: | # Какие файлы сохранить
             build/papergoose.exe
-            build/*.dll
-          if-no-files-found: error
+          if-no-files-found: error  # Если файлы не найдены - ошибка
 
-      - name: Загрузка артефактов (Linux)
+      - name: Загрузка артефактов (Linux) # Загрузка артефактов сборки (Linux)
         if: runner.os == 'Linux'
         uses: actions/upload-artifact@v4
         with:
-          name: papergoose-linux-${{ matrix.cmake_build_type }}-${{ matrix.c_compiler }}
+          name: papergoose-${{ runner.os }}-${{ matrix.build_type }}
           path: |
             build/papergoose
           if-no-files-found: error
@@ -106,10 +118,10 @@ jobs:
         working-directory: build
         run: |
           # Запуск всех тестов через CTest
-          ctest -C ${{ matrix.cmake_build_type }} --output-on-failure --verbose
+          ctest ${{ matrix.build_type }} --output-on-failure --verbose
 
       - name: Запуск тестов (Linux)
         if: runner.os == 'Linux'
         working-directory: build
         run: |
-          ctest -C ${{ matrix.cmake_build_type }} --output-on-failure --verbose
+          ctest ${{ matrix.build_type }} --output-on-failure --verbose
