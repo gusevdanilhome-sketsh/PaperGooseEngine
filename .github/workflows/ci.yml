@@ -6,6 +6,9 @@ on: # Триггеры запуска:
   pull_request:
     branches: [Dev] # Запуск при создании/обновлении Pull Request в Dev
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs: # Описание jobs (задач):
   build:  # Job для сборки проекта
     strategy: # Стратегия матрицы - запускает несколько параллельных сборок
@@ -45,7 +48,7 @@ jobs: # Описание jobs (задач):
         with:
           msystem: MINGW64  # Использовать MinGW 64-bit окружение
           update: true  # Обновить пакеты перед установкой
-          install: >-  # Список пакетов для установки
+          install: >  # Список пакетов для установки
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-cmake
             mingw-w64-x86_64-make
@@ -66,6 +69,8 @@ jobs: # Описание jobs (задач):
             libxrandr-dev \
             libxinerama-dev \
             libxi-dev \
+            libxkbcommon-dev \
+            libwayland-dev \
             libgl1-mesa-dev \
             xorg-dev
 
@@ -94,12 +99,12 @@ jobs: # Описание jobs (задач):
           # --build build : использовать папку build
           # --config ${{ matrix.build_type }} : тип сборки
           # -j $(nproc) : параллельная сборка (количество ядер CPU)
-          cmake --build build --config ${{ matrix.build_type }} -j $(nproc)
+          cmake --build build --config ${{ matrix.build_type }} -j $(nproc) --verbose
 
       - name: Сборка (Linux)  # Сборка проекта (Linux)
         if: runner.os == 'Linux'
         run: |
-          cmake --build build --config ${{ matrix.build_type }} -j $(nproc)
+          cmake --build build --config ${{ matrix.build_type }} -j $(nproc) --verbose
 
       - name: Загрузка артефактов (Windows) # Загрузка артефактов сборки (Windows)
         if: runner.os == 'Windows'
