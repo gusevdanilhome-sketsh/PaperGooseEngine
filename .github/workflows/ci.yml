@@ -59,8 +59,15 @@ jobs: # Описание jobs (задач):
           sudo apt-get install -y \
             build-essential \
             cmake \
+            gcc \
             libvulkan-dev \
-            gcc
+            libx11-dev \
+            libxcursor-dev \
+            libxrandr-dev \
+            libxinerama-dev \
+            libxi-dev \
+            libgl1-mesa-dev \
+            xorg-dev
 
       - name: Конфигурация CMake (Windows)  # Конфигурация CMake для Windows
         if: runner.os == 'Windows'
@@ -99,8 +106,7 @@ jobs: # Описание jobs (задач):
         uses: actions/upload-artifact@v4  # GitHub Action для загрузки файлов
         with:
           name: papergoose-${{ runner.os }}-${{ matrix.build_type }}  # Имя архива: papergoose-windows-Debug или papergoose-windows-Release
-          path: | # Какие файлы сохранить
-            build/papergoose.exe
+          path: build/papergoose.exe
           if-no-files-found: error  # Если файлы не найдены - ошибка
 
       - name: Загрузка артефактов (Linux) # Загрузка артефактов сборки (Linux)
@@ -108,20 +114,16 @@ jobs: # Описание jobs (задач):
         uses: actions/upload-artifact@v4
         with:
           name: papergoose-${{ runner.os }}-${{ matrix.build_type }}
-          path: |
-            build/papergoose
+          path: build/papergoose
           if-no-files-found: error
 
       - name: Запуск тестов (Windows)
         if: runner.os == 'Windows'
         shell: msys2 {0}
         working-directory: build
-        run: |
-          # Запуск всех тестов через CTest
-          ctest ${{ matrix.build_type }} --output-on-failure --verbose
+        run: ctest ${{ matrix.build_type }} --output-on-failure --verbose
 
       - name: Запуск тестов (Linux)
         if: runner.os == 'Linux'
         working-directory: build
-        run: |
-          ctest ${{ matrix.build_type }} --output-on-failure --verbose
+        run: ctest ${{ matrix.build_type }} --output-on-failure --verbose
