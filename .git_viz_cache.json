@@ -1,0 +1,341 @@
+{
+  "head_hash": "4cddd8cdd41a3a64460246dc3b7cd08517bcfb8d",
+  "path_filter": "",
+  "since_commit": "",
+  "commits": {
+    "4cddd8cdd41a3a64460246dc3b7cd08517bcfb8d": {
+      "parents": [
+        "e442be3a0289cc96b3250a4d3763b8c84a396ded"
+      ],
+      "message": "\u0414\u043e\u0440\u0430\u0431\u043e\u0442\u043a\u0430 \u0432\u0438\u0437\u0443\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u0438 \u0445\u0440\u0430\u043d\u0438\u043b\u0438\u0437\u0430",
+      "author": "Danil Gusev HOME",
+      "author_name": "Danil Gusev HOME",
+      "date_timestamp": 1780513935,
+      "date_str": "2026-06-04 00:12:15",
+      "hash": "4cddd8cdd41a3a64460246dc3b7cd08517bcfb8d"
+    },
+    "e442be3a0289cc96b3250a4d3763b8c84a396ded": {
+      "parents": [
+        "5c24207a0d80649ff0d25cb6d8292203ac0586b0"
+      ],
+      "message": "\u0414\u043e\u0440\u0430\u0431\u043e\u0442\u043a\u0430 \u0432\u0438\u0437\u0443\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u0438 \u0445\u0440\u0430\u043d\u0438\u043b\u0438\u0449\u0430",
+      "author": "Danil Gusev HOME",
+      "author_name": "Danil Gusev HOME",
+      "date_timestamp": 1780513743,
+      "date_str": "2026-06-04 00:09:03",
+      "hash": "e442be3a0289cc96b3250a4d3763b8c84a396ded"
+    },
+    "5c24207a0d80649ff0d25cb6d8292203ac0586b0": {
+      "parents": [
+        "8965f62c22a05190b652446da20eb381d7e8ba7b"
+      ],
+      "message": "\u0414\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u0438\u044f \u0432\u0438\u0437\u0443\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u0438 \u0445\u0440\u0430\u043d\u0438\u043b\u0438\u0449\u0430 Git",
+      "author": "Danil Gusev HOME",
+      "author_name": "Danil Gusev HOME",
+      "date_timestamp": 1780513307,
+      "date_str": "2026-06-04 00:01:47",
+      "hash": "5c24207a0d80649ff0d25cb6d8292203ac0586b0"
+    },
+    "ca311810070d1d685962e67763038a48a3273554": {
+      "parents": [
+        "1daacae17066e0d347d32f0b069a16e52a822b1c",
+        "8965f62c22a05190b652446da20eb381d7e8ba7b"
+      ],
+      "message": "Merge pull request #6 from gusevdanilhome-sketsh/Dev\n\nAdd GLFW window creation",
+      "author": "gusevdanilhome-sketsh",
+      "author_name": "gusevdanilhome-sketsh",
+      "date_timestamp": 1780418193,
+      "date_str": "2026-06-02 21:36:33",
+      "hash": "ca311810070d1d685962e67763038a48a3273554"
+    },
+    "8965f62c22a05190b652446da20eb381d7e8ba7b": {
+      "parents": [
+        "36e218fa88abc061ae5d79ce94bf0fb532c9bf56"
+      ],
+      "message": "\u0423\u0441\u0442\u0430\u043d\u043e\u0432\u043a\u0430 \u0434\u043e\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u044b\u0445 \u0437\u0430\u0432\u0438\u0441\u0438\u043c\u043e\u0441\u0442\u0435\u0439",
+      "author": "Danil Gusev HOME",
+      "author_name": "Danil Gusev HOME",
+      "date_timestamp": 1780417745,
+      "date_str": "2026-06-02 21:29:05",
+      "hash": "8965f62c22a05190b652446da20eb381d7e8ba7b"
+    },
+    "36e218fa88abc061ae5d79ce94bf0fb532c9bf56": {
+      "parents": [
+        "c7cc876d38418da1f27ef79f7c87c0adaf41412f"
+      ],
+      "message": "\u0414\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u0438\u0435 \u0437\u0430\u0432\u0438\u0441\u0438\u043c\u043e\u0441\u0442\u0435\u0439 \u0434\u043b\u044f Linux \u0447\u0435\u0440\u0435\u0437 CI",
+      "author": "Danil Gusev HOME",
+      "author_name": "Danil Gusev HOME",
+      "date_timestamp": 1780416941,
+      "date_str": "2026-06-02 21:15:41",
+      "hash": "36e218fa88abc061ae5d79ce94bf0fb532c9bf56"
+    },
+    "c7cc876d38418da1f27ef79f7c87c0adaf41412f": {
+      "parents": [
+        "5bb553e01f701edd91a64675dd5b3d96529c01e3"
+      ],
+      "message": "\u0414\u043e\u0440\u0430\u0431\u043e\u0442\u043a\u0430 CMake",
+      "author": "Danil Gusev HOME",
+      "author_name": "Danil Gusev HOME",
+      "date_timestamp": 1780416655,
+      "date_str": "2026-06-02 21:10:55",
+      "hash": "c7cc876d38418da1f27ef79f7c87c0adaf41412f"
+    },
+    "5bb553e01f701edd91a64675dd5b3d96529c01e3": {
+      "parents": [
+        "7703988ce485f475923f68bf518bd356aa32000c"
+      ],
+      "message": "\u0412\u0432\u0435\u0434\u0435\u043d\u0438\u0435 glfw",
+      "author": "Danil Gusev HOME",
+      "author_name": "Danil Gusev HOME",
+      "date_timestamp": 1780416481,
+      "date_str": "2026-06-02 21:08:01",
+      "hash": "5bb553e01f701edd91a64675dd5b3d96529c01e3"
+    },
+    "1daacae17066e0d347d32f0b069a16e52a822b1c": {
+      "parents": [
+        "db42be2b3b21309dc51aebdcf1c9088f4e25172e",
+        "7703988ce485f475923f68bf518bd356aa32000c"
+      ],
+      "message": "Merge pull request #5 from gusevdanilhome-sketsh/Dev\n\n\u0421\u0431\u043e\u0440\u043a\u0430 \u0441 Vulkan",
+      "author": "gusevdanilhome-sketsh",
+      "author_name": "gusevdanilhome-sketsh",
+      "date_timestamp": 1780333643,
+      "date_str": "2026-06-01 22:07:23",
+      "hash": "1daacae17066e0d347d32f0b069a16e52a822b1c"
+    },
+    "7703988ce485f475923f68bf518bd356aa32000c": {
+      "parents": [
+        "fbfe3b257df81eaf3747eaab186a78668ab4888b"
+      ],
+      "message": "\u0418\u0441\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435 \u043e\u0448\u0438\u0431\u043e\u043a \u0441\u0431\u043e\u0440\u043a\u0438",
+      "author": "Danil Gusev HOME",
+      "author_name": "Danil Gusev HOME",
+      "date_timestamp": 1780333440,
+      "date_str": "2026-06-01 22:04:00",
+      "hash": "7703988ce485f475923f68bf518bd356aa32000c"
+    },
+    "fbfe3b257df81eaf3747eaab186a78668ab4888b": {
+      "parents": [
+        "80b44758b7374732554127cb930a5a10761e7e60"
+      ],
+      "message": "\u0422\u0435\u0441\u0442\u043e\u0432\u0430\u044f \u0441\u0431\u043e\u0440\u043a\u0430 \u0441 Vulkan",
+      "author": "Danil Gusev HOME",
+      "author_name": "Danil Gusev HOME",
+      "date_timestamp": 1780070510,
+      "date_str": "2026-05-29 21:01:50",
+      "hash": "fbfe3b257df81eaf3747eaab186a78668ab4888b"
+    },
+    "db42be2b3b21309dc51aebdcf1c9088f4e25172e": {
+      "parents": [
+        "09db3939b5ec79e09d1d8e70879d5f1f141f3e8a",
+        "80b44758b7374732554127cb930a5a10761e7e60"
+      ],
+      "message": "Add CI pipeline",
+      "author": "gusevdanilhome-sketsh",
+      "author_name": "gusevdanilhome-sketsh",
+      "date_timestamp": 1780067228,
+      "date_str": "2026-05-29 20:07:08",
+      "hash": "db42be2b3b21309dc51aebdcf1c9088f4e25172e"
+    },
+    "80b44758b7374732554127cb930a5a10761e7e60": {
+      "parents": [
+        "080e29201c2636f03977cfed6e7ce23fa1e842b3"
+      ],
+      "message": "\u0414\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u0438\u0435 \u0442\u0435\u0441\u0442\u043e\u0432 \u0432 CI",
+      "author": "Danil Gusev HOME",
+      "author_name": "Danil Gusev HOME",
+      "date_timestamp": 1780065989,
+      "date_str": "2026-05-29 19:46:29",
+      "hash": "80b44758b7374732554127cb930a5a10761e7e60"
+    },
+    "080e29201c2636f03977cfed6e7ce23fa1e842b3": {
+      "parents": [
+        "5b6913928954b6d06581023a92d265ae9d82cb2e"
+      ],
+      "message": "\u0420\u0435\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u044f \u0441\u0431\u043e\u0440\u043a\u0438 Debug \u0438 Release",
+      "author": "Danil Gusev HOME",
+      "author_name": "Danil Gusev HOME",
+      "date_timestamp": 1780064810,
+      "date_str": "2026-05-29 19:26:50",
+      "hash": "080e29201c2636f03977cfed6e7ce23fa1e842b3"
+    },
+    "09db3939b5ec79e09d1d8e70879d5f1f141f3e8a": {
+      "parents": [
+        "f55f589ffb92974c16e9d5938c641961aae9c85b",
+        "5b6913928954b6d06581023a92d265ae9d82cb2e"
+      ],
+      "message": "\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430 CI\n\n\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430 \u043c\u0438\u043d\u0438\u043c\u0430\u043b\u044c\u043d\u043e\u0433\u043e CI",
+      "author": "gusevdanilhome-sketsh",
+      "author_name": "gusevdanilhome-sketsh",
+      "date_timestamp": 1780064479,
+      "date_str": "2026-05-29 19:21:19",
+      "hash": "09db3939b5ec79e09d1d8e70879d5f1f141f3e8a"
+    },
+    "5b6913928954b6d06581023a92d265ae9d82cb2e": {
+      "parents": [
+        "2a3a428854e6b4c59577f2f2e74a6ce149584d42"
+      ],
+      "message": "\u041e\u0442\u043a\u0430\u0442 CI \u0434\u043b\u044f \u0440\u0430\u0437-\u0440\u0435\u0448\u0435\u043d\u0438\u044f \u043e\u0448\u0438\u0431\u043e\u043a",
+      "author": "Danil Gusev HOME",
+      "author_name": "Danil Gusev HOME",
+      "date_timestamp": 1780064327,
+      "date_str": "2026-05-29 19:18:47",
+      "hash": "5b6913928954b6d06581023a92d265ae9d82cb2e"
+    },
+    "2a3a428854e6b4c59577f2f2e74a6ce149584d42": {
+      "parents": [
+        "f31dd35f1d9ad338673f6f376a87843bed4637e7"
+      ],
+      "message": "\u0423\u0441\u0442\u0440\u0430\u043d\u0435\u043d\u0438\u0435 \u043f\u0440\u043e\u0431\u043b\u0435\u043c \u0441 Windows",
+      "author": "Danil Gusev HOME",
+      "author_name": "Danil Gusev HOME",
+      "date_timestamp": 1780063720,
+      "date_str": "2026-05-29 19:08:40",
+      "hash": "2a3a428854e6b4c59577f2f2e74a6ce149584d42"
+    },
+    "f31dd35f1d9ad338673f6f376a87843bed4637e7": {
+      "parents": [
+        "84df950d0b0b8104df3cc72ca56f9cb556b418d5"
+      ],
+      "message": "\u0414\u043e\u0440\u0430\u0431\u043e\u0442\u043a\u0430 CI \u0434\u043b\u044f Linux",
+      "author": "Danil Gusev HOME",
+      "author_name": "Danil Gusev HOME",
+      "date_timestamp": 1780063370,
+      "date_str": "2026-05-29 19:02:50",
+      "hash": "f31dd35f1d9ad338673f6f376a87843bed4637e7"
+    },
+    "84df950d0b0b8104df3cc72ca56f9cb556b418d5": {
+      "parents": [
+        "5da54829bcfa7885c0924867a4684e5463b65b39"
+      ],
+      "message": "\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430 \u043c\u0438\u043d\u0438\u043c\u0430\u043b\u044c\u043d\u043e\u0433\u043e CI",
+      "author": "Danil Gusev HOME",
+      "author_name": "Danil Gusev HOME",
+      "date_timestamp": 1780062880,
+      "date_str": "2026-05-29 18:54:40",
+      "hash": "84df950d0b0b8104df3cc72ca56f9cb556b418d5"
+    },
+    "f55f589ffb92974c16e9d5938c641961aae9c85b": {
+      "parents": [
+        "b0c8eeab8fea5f172519d709cd3992df11933355",
+        "5da54829bcfa7885c0924867a4684e5463b65b39"
+      ],
+      "message": "Merge pull request #2 from gusevdanilhome-sketsh/Dev\n\nFixe CI",
+      "author": "gusevdanilhome-sketsh",
+      "author_name": "gusevdanilhome-sketsh",
+      "date_timestamp": 1779981008,
+      "date_str": "2026-05-28 20:10:08",
+      "hash": "f55f589ffb92974c16e9d5938c641961aae9c85b"
+    },
+    "5da54829bcfa7885c0924867a4684e5463b65b39": {
+      "parents": [
+        "6bc00d8916fee1228bf224e0e504b05329b21e19"
+      ],
+      "message": "Fixe CI",
+      "author": "Danil Gusev HOME",
+      "author_name": "Danil Gusev HOME",
+      "date_timestamp": 1779980855,
+      "date_str": "2026-05-28 20:07:35",
+      "hash": "5da54829bcfa7885c0924867a4684e5463b65b39"
+    },
+    "b0c8eeab8fea5f172519d709cd3992df11933355": {
+      "parents": [
+        "25e59b8ff71840755263854be9e3e3d693bcadeb",
+        "6bc00d8916fee1228bf224e0e504b05329b21e19"
+      ],
+      "message": "Merge pull request #1 from gusevdanilhome-sketsh/Dev\n\nDev",
+      "author": "gusevdanilhome-sketsh",
+      "author_name": "gusevdanilhome-sketsh",
+      "date_timestamp": 1779979869,
+      "date_str": "2026-05-28 19:51:09",
+      "hash": "b0c8eeab8fea5f172519d709cd3992df11933355"
+    },
+    "6bc00d8916fee1228bf224e0e504b05329b21e19": {
+      "parents": [
+        "4b1846957784243e353356e3a8574ac03a07ffa0"
+      ],
+      "message": "Make CI file",
+      "author": "Danil Gusev HOME",
+      "author_name": "Danil Gusev HOME",
+      "date_timestamp": 1779979428,
+      "date_str": "2026-05-28 19:43:48",
+      "hash": "6bc00d8916fee1228bf224e0e504b05329b21e19"
+    },
+    "4b1846957784243e353356e3a8574ac03a07ffa0": {
+      "parents": [
+        "c63a082788e3c23c01ec98bea6034912f8745f8f"
+      ],
+      "message": "Initial CMake project with GCC",
+      "author": "Danil Gusev HOME",
+      "author_name": "Danil Gusev HOME",
+      "date_timestamp": 1779911163,
+      "date_str": "2026-05-28 00:46:03",
+      "hash": "4b1846957784243e353356e3a8574ac03a07ffa0"
+    },
+    "c63a082788e3c23c01ec98bea6034912f8745f8f": {
+      "parents": [
+        "355b44f7b864266fa0e71b1dc8836de40defb85f"
+      ],
+      "message": "feat: \u043d\u0430\u0441\u0442\u0440\u043e\u0435\u043d\u0430 \u0431\u0430\u0437\u043e\u0432\u0430\u044f \u0441\u0431\u043e\u0440\u043a\u0430 PaperGoose \u0441 GLFW \u0438 Vulkan",
+      "author": "Danil Gusev HOME",
+      "author_name": "Danil Gusev HOME",
+      "date_timestamp": 1779910328,
+      "date_str": "2026-05-28 00:32:08",
+      "hash": "c63a082788e3c23c01ec98bea6034912f8745f8f"
+    },
+    "355b44f7b864266fa0e71b1dc8836de40defb85f": {
+      "parents": [
+        "218dd4d11b983788b1209610103c62625d898a12"
+      ],
+      "message": "feat: \u043d\u0430\u0441\u0442\u0440\u043e\u0435\u043d\u0430 \u0431\u0430\u0437\u043e\u0432\u0430\u044f \u0441\u0431\u043e\u0440\u043a\u0430 PaperGoose \u0441 GLFW \u0438 Vulkan",
+      "author": "Danil Gusev HOME",
+      "author_name": "Danil Gusev HOME",
+      "date_timestamp": 1779910230,
+      "date_str": "2026-05-28 00:30:30",
+      "hash": "355b44f7b864266fa0e71b1dc8836de40defb85f"
+    },
+    "218dd4d11b983788b1209610103c62625d898a12": {
+      "parents": [
+        "e7b834ee6fabbf18368fcdd481796c62d9b69549"
+      ],
+      "message": "first commit",
+      "author": "Danil Gusev HOME",
+      "author_name": "Danil Gusev HOME",
+      "date_timestamp": 1779898346,
+      "date_str": "2026-05-27 21:12:26",
+      "hash": "218dd4d11b983788b1209610103c62625d898a12"
+    },
+    "e7b834ee6fabbf18368fcdd481796c62d9b69549": {
+      "parents": [
+        "25e59b8ff71840755263854be9e3e3d693bcadeb"
+      ],
+      "message": "\u0417\u0430\u043f\u0443\u0441\u043a SDL \u043e\u043a\u043d\u0430",
+      "author": "Danil Gusev HOME",
+      "author_name": "Danil Gusev HOME",
+      "date_timestamp": 1779813583,
+      "date_str": "2026-05-26 21:39:43",
+      "hash": "e7b834ee6fabbf18368fcdd481796c62d9b69549"
+    },
+    "25e59b8ff71840755263854be9e3e3d693bcadeb": {
+      "parents": [
+        "5b36438165b895ae77aca1efcbc2ddc81669f90c"
+      ],
+      "message": "Update README.md\n\n\u041e\u043f\u0438\u0441\u0430\u043d\u0438\u0435 \u0446\u0435\u043b\u0435\u0439 \u043f\u0440\u043e\u0435\u043a\u0442\u0430 \u0438 \u043f\u043b\u0430\u043d\u0430 \u0440\u0430\u0431\u043e\u0442\u044b",
+      "author": "gusevdanilhome-sketsh",
+      "author_name": "gusevdanilhome-sketsh",
+      "date_timestamp": 1779651815,
+      "date_str": "2026-05-25 00:43:35",
+      "hash": "25e59b8ff71840755263854be9e3e3d693bcadeb"
+    },
+    "5b36438165b895ae77aca1efcbc2ddc81669f90c": {
+      "parents": [],
+      "message": "Initial commit",
+      "author": "gusevdanilhome-sketsh",
+      "author_name": "gusevdanilhome-sketsh",
+      "date_timestamp": 1779651282,
+      "date_str": "2026-05-25 00:34:42",
+      "hash": "5b36438165b895ae77aca1efcbc2ddc81669f90c"
+    }
+  }
+}
