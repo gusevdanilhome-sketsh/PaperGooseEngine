@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
 """
 Ультимативная визуализация Git-хранилища.
-Расширенная версия с:
-- полной информацией о коммитах (автор, дата)
-- боковой панелью со статистикой (топ авторов, гистограмма)
-- возможностью разворачивать свёрнутые цепочки
-- фильтрацией по автору и дате
+Расширенная версия с экспортом PNG, сохранением состояния, подсветкой пути.
 """
 
 import subprocess
@@ -18,11 +14,10 @@ from datetime import datetime
 from typing import Dict, List, Set, Tuple, Optional
 
 # ----------------------------------------------------------------------
-#  Вспомогательные функции для работы с Git (кроссплатформенно)
+#  Вспомогательные функции для работы с Git
 # ----------------------------------------------------------------------
 
 def run_git(*args):
-    """Выполняет git команду и возвращает stdout (текст в UTF-8)."""
     try:
         result = subprocess.run(
             ['git'] + list(args),
@@ -46,25 +41,14 @@ def run_git(*args):
         except:
             return ""
 
-def get_all_commits() -> Dict[str, Dict]:
-    """
-    Возвращает подробную информацию о каждом коммите:
-    {
-        hash: {
-            "parents": [list],
-            "message": str,
-            "author": str,
-            "date_timestamp": int,
-            "date_str": str,
-            "author_name": str (чистое имя)
-        }
-    }
-    """
+def get_all_commits(max_commits: int = 0) -> Dict[str, Dict]:
     hashes_raw = run_git('rev-list', '--all')
     if not hashes_raw:
-        print("Не удалось получить список коммитов.")
         return {}
     hashes = hashes_raw.splitlines()
+    if max_commits > 0 and len(hashes) > max_commits:
+        hashes = hashes[:max_commits]
+        print(f"Ограничение: загружено только {max_commits} коммитов (используйте --max-commits=0 для всех)")
     print(f"Загружено коммитов: {len(hashes)}")
 
     commits = {}
@@ -85,16 +69,12 @@ def get_all_commits() -> Dict[str, Dict]:
             if line.startswith('parent '):
                 parents.append(line[7:])
             elif line.startswith('author '):
-                # формат: "author Name Surname <email> 1234567890 +0300"
                 parts = line.split()
                 if len(parts) >= 5:
-                    # последние два - timestamp и timezone
                     timestamp = parts[-2]
-                    tz = parts[-1]
                     date_timestamp = int(timestamp)
                     dt = datetime.fromtimestamp(date_timestamp)
                     date_str = dt.strftime("%Y-%m-%d %H:%M:%S")
-                    # имя автора - всё между "author " и "<"
                     author_full = line[7:].rsplit(' <', 1)[0]
                     author = author_full
                     author_name = author_full.split('<')[0].strip()
@@ -115,7 +95,6 @@ def get_all_commits() -> Dict[str, Dict]:
     return commits
 
 def get_all_tags() -> Dict[str, Tuple[str, bool]]:
-    """Возвращает {имя_тега: (хеш, является_аннотированным)}."""
     tags = {}
     refs = run_git('show-ref', '--tags')
     if not refs:
@@ -136,7 +115,6 @@ def get_all_tags() -> Dict[str, Tuple[str, bool]]:
     return tags
 
 def get_annotated_tag_target(tag_hash: str) -> str:
-    """Для аннотированного тега возвращает хеш коммита."""
     content = run_git('cat-file', '-p', tag_hash)
     if not content:
         return ""
@@ -146,7 +124,6 @@ def get_annotated_tag_target(tag_hash: str) -> str:
     return ""
 
 def get_branches() -> Dict[str, str]:
-    """Возвращает {имя_ветки: хеш_коммита}."""
     branches = {}
     output = run_git('branch', '--format=%(refname:short) %(objectname)')
     if not output:
@@ -161,7 +138,6 @@ def get_branches() -> Dict[str, str]:
     return branches
 
 def get_head() -> Optional[str]:
-    """Возвращает хеш текущего HEAD."""
     head = run_git('rev-parse', 'HEAD')
     return head if head else None
 
@@ -170,8 +146,6 @@ def get_head() -> Optional[str]:
 # ----------------------------------------------------------------------
 
 def compute_linear_chains(commits: Dict[str, Dict]) -> Dict[str, str]:
-    """Определяет маппинг коммит -> представитель группы."""
-    # строим словарь детей
     children = defaultdict(list)
     for h, data in commits.items():
         for p in data["parents"]:
@@ -184,7 +158,6 @@ def compute_linear_chains(commits: Dict[str, Dict]) -> Dict[str, str]:
         if len(children.get(h, [])) != 1:
             important.add(h)
 
-    # добавляем ветки и теги
     branches = get_branches()
     for branch_hash in branches.values():
         important.add(branch_hash)
@@ -220,13 +193,6 @@ def compute_linear_chains(commits: Dict[str, Dict]) -> Dict[str, str]:
     return mapping
 
 def build_collapsed_graph(commits: Dict[str, Dict], mapping: Dict[str, str]):
-    """
-    Строит свёрнутые узлы и рёбра.
-    Возвращает:
-        nodes: dict {collapsed_id: {id, label, title, group, shape, color, collapsed_hashes (list)}}
-        edges: list of (from, to)
-        collapsed_groups: dict {collapsed_id: [original_hashes]}
-    """
     groups = defaultdict(list)
     for orig, collapsed in mapping.items():
         groups[collapsed].append(orig)
@@ -243,7 +209,6 @@ def build_collapsed_graph(commits: Dict[str, Dict], mapping: Dict[str, str]):
             shape = "ellipse"
             color_bg = "#97C2FC"
         else:
-            # свёрнутая цепочка
             first = orig_list[0]
             last = orig_list[-1]
             count = len(orig_list)
@@ -261,9 +226,8 @@ def build_collapsed_graph(commits: Dict[str, Dict], mapping: Dict[str, str]):
             "shape": shape,
             "color": {"background": color_bg, "border": "#2c3e50"},
             "font": {"size": 12},
-            "collapsed_hashes": orig_list   # сохраняем для разворачивания
+            "collapsed_hashes": orig_list
         }
-    # рёбра
     edges = set()
     for orig, data in commits.items():
         from_node = mapping[orig]
@@ -273,22 +237,15 @@ def build_collapsed_graph(commits: Dict[str, Dict], mapping: Dict[str, str]):
                 edges.add((from_node, to_node))
     return nodes, list(edges), collapsed_groups
 
-# ----------------------------------------------------------------------
-#  Подготовка статистики
-# ----------------------------------------------------------------------
-
 def compute_statistics(commits: Dict[str, Dict]) -> Dict:
-    """Возвращает статистику: всего коммитов, топ авторов, распределение по датам."""
     total = len(commits)
     authors = Counter()
     date_counts = Counter()
     for data in commits.values():
         authors[data['author_name']] += 1
-        date = data['date_str'].split()[0]  # YYYY-MM-DD
+        date = data['date_str'].split()[0]
         date_counts[date] += 1
-    # топ-10 авторов
     top_authors = authors.most_common(10)
-    # даты для гистограммы (отсортированные)
     sorted_dates = sorted(date_counts.items())
     return {
         "total_commits": total,
@@ -298,7 +255,7 @@ def compute_statistics(commits: Dict[str, Dict]) -> Dict:
     }
 
 # ----------------------------------------------------------------------
-#  Генерация HTML (с боковой панелью, фильтрацией и разворачиванием)
+#  Генерация HTML с расширенными функциями
 # ----------------------------------------------------------------------
 
 def generate_html(nodes: Dict[str, dict], edges: List[tuple],
@@ -306,11 +263,9 @@ def generate_html(nodes: Dict[str, dict], edges: List[tuple],
                   all_commits: Dict[str, Dict],
                   statistics: Dict,
                   output_file: str):
-    """Генерирует интерактивный HTML с расширенными возможностями."""
     nodes_list = list(nodes.values())
     edges_list = [{"from": u, "to": v} for u, v in edges]
 
-    # Подготовим данные о всех коммитах для разворачивания
     commits_data = {}
     for h, data in all_commits.items():
         commits_data[h] = {
@@ -320,9 +275,6 @@ def generate_html(nodes: Dict[str, dict], edges: List[tuple],
             "date": data['date_str'],
             "parents": data['parents']
         }
-
-    # Передаём collapsed_groups как словарь: collapsed_id -> список хешей
-    # и commits_data для полной информации
 
     html_template = """<!DOCTYPE html>
 <html>
@@ -350,9 +302,7 @@ def generate_html(nodes: Dict[str, dict], edges: List[tuple],
             transition: transform 0.3s ease;
             transform: translateX(0);
         }
-        #sidebar.collapsed {
-            transform: translateX(-100%);
-        }
+        #sidebar.collapsed { transform: translateX(-100%); }
         #toggleSidebar {
             position: absolute;
             left: 330px;
@@ -373,13 +323,9 @@ def generate_html(nodes: Dict[str, dict], edges: List[tuple],
         .filter-group { margin: 15px 0; }
         .filter-group label { display: block; margin-bottom: 5px; font-weight: bold; }
         select, input { width: 100%; padding: 5px; border-radius: 4px; border: none; }
-        button { background: #3498db; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-top: 5px; }
+        button { background: #3498db; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-top: 5px; margin-right: 5px; }
         button:hover { background: #2980b9; }
-        #network {
-            width: 100%;
-            height: 100vh;
-            background: #fafafa;
-        }
+        #network { width: 100%; height: 100vh; background: #fafafa; }
         .modal {
             display: none;
             position: fixed;
@@ -403,6 +349,7 @@ def generate_html(nodes: Dict[str, dict], edges: List[tuple],
         .commit-list { list-style: none; margin: 10px 0; }
         .commit-list li { border-bottom: 1px solid #eee; padding: 6px 0; font-size: 12px; }
         .close-modal { float: right; cursor: pointer; font-size: 24px; }
+        .highlighted { filter: drop-shadow(0 0 4px red); }
     </style>
 </head>
 <body>
@@ -410,18 +357,14 @@ def generate_html(nodes: Dict[str, dict], edges: List[tuple],
     <h2>📊 Статистика</h2>
     <p>Всего коммитов: <span class="stat-number">{{TOTAL_COMMITS}}</span></p>
     <h3>🏆 Топ авторов</h3>
-    <ul class="author-list" id="topAuthors">
-        <!-- заполнится из JavaScript -->
-    </ul>
+    <ul class="author-list" id="topAuthors"></ul>
     <h3>📅 Коммиты по дням</h3>
     <canvas id="histogram" width="280" height="150" style="background: #fff; border-radius: 6px;"></canvas>
 
     <h3>🔍 Фильтры</h3>
     <div class="filter-group">
         <label>👤 Автор</label>
-        <select id="filterAuthor">
-            <option value="">Все</option>
-        </select>
+        <select id="filterAuthor"><option value="">Все</option></select>
     </div>
     <div class="filter-group">
         <label>📆 Начиная с даты</label>
@@ -432,13 +375,13 @@ def generate_html(nodes: Dict[str, dict], edges: List[tuple],
         <input type="date" id="filterDateTo">
     </div>
     <button id="applyFilters">Применить фильтр</button>
-    <button id="resetFilters" style="background:#7f8c8d;">Сбросить</button>
+    <button id="resetFilters">Сбросить</button>
+    <button id="exportPNG">📸 Экспорт PNG</button>
+    <button id="clearHighlight">✨ Снять подсветку</button>
 </div>
 <button id="toggleSidebar">☰</button>
-
 <div id="network"></div>
 
-<!-- Модальное окно для разворачивания -->
 <div id="expandModal" class="modal">
     <div class="modal-content">
         <span class="close-modal">&times;</span>
@@ -451,22 +394,45 @@ def generate_html(nodes: Dict[str, dict], edges: List[tuple],
 </div>
 
 <script>
-    // Данные, переданные из Python
+    // Данные из Python
     var allNodes = {{NODES_JSON}};
     var allEdges = {{EDGES_JSON}};
     var collapsedGroups = {{COLLAPSED_GROUPS_JSON}};
     var commitsData = {{COMMITS_DATA_JSON}};
     var statistics = {{STATISTICS_JSON}};
 
-    // Глобальные объекты vis
     var nodesDataSet = new vis.DataSet(allNodes);
     var edgesDataSet = new vis.DataSet(allEdges);
     var network;
+    var currentAuthorFilter = "", currentDateFrom = "", currentDateTo = "";
 
-    // Фильтры
-    var currentAuthorFilter = "";
-    var currentDateFrom = "";
-    var currentDateTo = "";
+    // Сохранение состояния
+    function saveState() {
+        var state = {
+            author: currentAuthorFilter,
+            dateFrom: currentDateFrom,
+            dateTo: currentDateTo,
+            collapsedGroups: collapsedGroups,
+            nodes: nodesDataSet.get()
+        };
+        localStorage.setItem('gitVizState', JSON.stringify(state));
+    }
+
+    function loadState() {
+        var saved = localStorage.getItem('gitVizState');
+        if (saved) {
+            try {
+                var state = JSON.parse(saved);
+                currentAuthorFilter = state.author || "";
+                currentDateFrom = state.dateFrom || "";
+                currentDateTo = state.dateTo || "";
+                document.getElementById("filterAuthor").value = currentAuthorFilter;
+                document.getElementById("filterDateFrom").value = currentDateFrom;
+                document.getElementById("filterDateTo").value = currentDateTo;
+                applyFilters();
+            } catch(e) {}
+        }
+    }
 
     // Инициализация графа
     function initGraph() {
@@ -479,27 +445,81 @@ def generate_html(nodes: Dict[str, dict], edges: List[tuple],
             interaction: { hover: true, tooltipDelay: 100 }
         };
         network = new vis.Network(container, data, options);
-
-        // Обработчик клика для разворачивания
         network.on("click", function(params) {
             if (params.nodes.length === 1) {
                 var nodeId = params.nodes[0];
                 var node = nodesDataSet.get(nodeId);
                 if (node && node.group === "collapsed") {
                     showExpandModal(nodeId);
+                } else if (node && node.group === "commit") {
+                    highlightPath(nodeId);
                 }
             }
         });
     }
 
-    // Модальное окно для разворачивания
+    // Подсветка пути от коммита до корня (по родителям)
+    function highlightPath(commitId) {
+        var pathNodes = new Set();
+        var queue = [commitId];
+        var visited = new Set();
+        while (queue.length) {
+            var current = queue.shift();
+            if (visited.has(current)) continue;
+            visited.add(current);
+            pathNodes.add(current);
+            var commit = commitsData[current];
+            if (commit && commit.parents) {
+                for (var p of commit.parents) {
+                    if (!visited.has(p)) queue.push(p);
+                }
+            }
+        }
+        // Сначала сбросим все выделения
+        var allCurrentNodes = nodesDataSet.get();
+        for (var n of allCurrentNodes) {
+            nodesDataSet.update([{ id: n.id, color: n.originalColor || n.color, font: { size: 12 } }]);
+        }
+        // Выделим найденные узлы (сохраним оригинальные цвета)
+        for (var id of pathNodes) {
+            var node = nodesDataSet.get(id);
+            if (node) {
+                if (!node.originalColor) node.originalColor = node.color;
+                nodesDataSet.update([{ id: id, color: { background: "#FFD966", border: "#B8860B" }, font: { size: 14, bold: true } }]);
+            }
+        }
+        // Также выделим рёбра (опционально)
+        network.fit({ nodes: Array.from(pathNodes), animation: true });
+    }
+
+    function clearHighlight() {
+        var allCurrentNodes = nodesDataSet.get();
+        for (var n of allCurrentNodes) {
+            var origColor = n.originalColor || n.color;
+            nodesDataSet.update([{ id: n.id, color: origColor, font: { size: 12 } }]);
+        }
+    }
+
+    // Экспорт PNG
+    function exportPNG() {
+        var canvas = document.querySelector("#network canvas");
+        if (canvas) {
+            var link = document.createElement('a');
+            link.download = 'git_graph.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        } else {
+            alert("Не удалось найти canvas");
+        }
+    }
+
+    // Разворачивание цепочки (как ранее)
     var currentCollapsedId = null;
     function showExpandModal(collapsedId) {
         currentCollapsedId = collapsedId;
         var hashes = collapsedGroups[collapsedId] || [];
         var listHtml = "";
-        for (var i = 0; i < hashes.length; i++) {
-            var h = hashes[i];
+        for (var h of hashes) {
             var commit = commitsData[h];
             if (commit) {
                 listHtml += `<li><b>${h.substring(0,7)}</b> ${commit.author} – ${commit.message.substring(0,50)}</li>`;
@@ -514,12 +534,9 @@ def generate_html(nodes: Dict[str, dict], edges: List[tuple],
     function expandCollapsedNode(collapsedId) {
         var hashes = collapsedGroups[collapsedId] || [];
         if (hashes.length <= 1) return;
-        // Удаляем свёрнутый узел
         nodesDataSet.remove(collapsedId);
-        // Добавляем все коммиты из цепочки
         var addedNodes = [];
-        for (var i = 0; i < hashes.length; i++) {
-            var h = hashes[i];
+        for (var h of hashes) {
             var commit = commitsData[h];
             if (!commit) continue;
             var label = `${h.substring(0,7)}\\n${commit.message.substring(0,20)}`;
@@ -536,95 +553,98 @@ def generate_html(nodes: Dict[str, dict], edges: List[tuple],
             nodesDataSet.add(newNode);
             addedNodes.push(h);
         }
-        // Перестраиваем рёбра между этими коммитами и внешними связями
-        // Сначала удалим старые рёбра, которые ссылались на collapsedId
         var allEdges = edgesDataSet.get();
         var toRemove = [];
-        for (var j = 0; j < allEdges.length; j++) {
-            var e = allEdges[j];
-            if (e.from === collapsedId || e.to === collapsedId) {
-                toRemove.push(e.id);
-            }
+        for (var e of allEdges) {
+            if (e.from === collapsedId || e.to === collapsedId) toRemove.push(e.id);
         }
         edgesDataSet.remove(toRemove);
-        // Добавим рёбра между коммитами внутри цепочки (используя исходные родительские связи)
         var newEdges = [];
-        for (var k = 0; k < hashes.length; k++) {
-            var h = hashes[k];
+        for (var h of hashes) {
             var commit = commitsData[h];
             if (commit && commit.parents) {
                 for (var p of commit.parents) {
-                    // если родитель тоже в этой группе или уже существует как узел
                     if (hashes.includes(p) || nodesDataSet.get(p)) {
                         newEdges.push({ from: h, to: p });
                     } else {
-                        // внешний родитель – нужно добавить ребро, даже если узла нет (добавим позже)
-                        if (!nodesDataSet.get(p)) {
-                            // добавим заглушку для внешнего родителя? но он может быть другим свёрнутым узлом
-                            // проще добавить ребро, vis сам создаст узел? нет – нужно убедиться, что узел есть.
-                            // В реальности внешний родитель может быть уже добавлен как свёрнутый узел или коммит.
-                            if (!nodesDataSet.get(p) && !collapsedGroups[p]) {
-                                // добавим как точку
-                                nodesDataSet.add({ id: p, label: p.substring(0,7), shape: "point", size: 5 });
-                            }
+                        if (!nodesDataSet.get(p) && !collapsedGroups[p]) {
+                            nodesDataSet.add({ id: p, label: p.substring(0,7), shape: "point", size: 5 });
                         }
                         newEdges.push({ from: h, to: p });
                     }
                 }
             }
         }
-        // Добавляем также рёбра от внешних узлов к первому/последнему коммиту цепочки
-        // (они уже частично покрываются родительскими связями)
         edgesDataSet.add(newEdges);
-        // Обновляем collapsedGroups
         delete collapsedGroups[collapsedId];
-        // Перезапустим физику
         network.fit();
+        saveState();
     }
 
-    // Обработчики модального окна
-    document.getElementById("confirmExpand").onclick = function() {
-        if (currentCollapsedId) {
-            expandCollapsedNode(currentCollapsedId);
-            document.getElementById("expandModal").style.display = "none";
+    // Фильтрация
+    function applyFilters() {
+        currentAuthorFilter = document.getElementById("filterAuthor").value;
+        currentDateFrom = document.getElementById("filterDateFrom").value;
+        currentDateTo = document.getElementById("filterDateTo").value;
+        var allCurrentNodes = nodesDataSet.get();
+        for (var node of allCurrentNodes) {
+            var visible = true;
+            if (node.group === "commit") {
+                var commit = commitsData[node.id];
+                if (commit) {
+                    if (currentAuthorFilter && commit.author !== currentAuthorFilter) visible = false;
+                    if (currentDateFrom && commit.date < currentDateFrom) visible = false;
+                    if (currentDateTo && commit.date > currentDateTo) visible = false;
+                }
+            } else if (node.group === "collapsed") {
+                var hashes = collapsedGroups[node.id] || [node.id];
+                var anyMatch = false;
+                for (var h of hashes) {
+                    var c = commitsData[h];
+                    if (c) {
+                        if (currentAuthorFilter && c.author !== currentAuthorFilter) continue;
+                        if (currentDateFrom && c.date < currentDateFrom) continue;
+                        if (currentDateTo && c.date > currentDateTo) continue;
+                        anyMatch = true;
+                        break;
+                    }
+                }
+                visible = anyMatch;
+            }
+            nodesDataSet.update([{ id: node.id, hidden: !visible }]);
         }
-    };
-    document.getElementById("cancelExpand").onclick = function() {
-        document.getElementById("expandModal").style.display = "none";
-    };
-    document.querySelector(".close-modal").onclick = function() {
-        document.getElementById("expandModal").style.display = "none";
-    };
+        saveState();
+    }
 
-    // Статистика и фильтры
+    function resetFilters() {
+        document.getElementById("filterAuthor").value = "";
+        document.getElementById("filterDateFrom").value = "";
+        document.getElementById("filterDateTo").value = "";
+        currentAuthorFilter = "";
+        currentDateFrom = "";
+        currentDateTo = "";
+        applyFilters();
+    }
+
+    // Статистика
     function renderStatistics() {
         var topHtml = "";
         for (var a of statistics.top_authors) {
             topHtml += `<li>${a.name}: ${a.count} коммитов</li>`;
         }
         document.getElementById("topAuthors").innerHTML = topHtml;
-
-        // Гистограмма
         var ctx = document.getElementById('histogram').getContext('2d');
         new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: statistics.dates.slice(-30), // последние 30 дней
-                datasets: [{
-                    label: 'Коммиты',
-                    data: statistics.counts.slice(-30),
-                    backgroundColor: '#3498db'
-                }]
+                labels: statistics.dates.slice(-30),
+                datasets: [{ label: 'Коммиты', data: statistics.counts.slice(-30), backgroundColor: '#3498db' }]
             },
             options: { responsive: true, maintainAspectRatio: true }
         });
-
-        // Заполнить select авторов
         var authorSelect = document.getElementById("filterAuthor");
         var authorsSet = new Set();
-        for (var h in commitsData) {
-            authorsSet.add(commitsData[h].author);
-        }
+        for (var h in commitsData) authorsSet.add(commitsData[h].author);
         var sortedAuthors = Array.from(authorsSet).sort();
         for (var a of sortedAuthors) {
             var option = document.createElement("option");
@@ -634,65 +654,27 @@ def generate_html(nodes: Dict[str, dict], edges: List[tuple],
         }
     }
 
-    function applyFilters() {
-        var author = document.getElementById("filterAuthor").value;
-        var dateFrom = document.getElementById("filterDateFrom").value;
-        var dateTo = document.getElementById("filterDateTo").value;
-
-        // Фильтрация узлов: скрываем те, которые не подходят под критерии
-        var allCurrentNodes = nodesDataSet.get();
-        for (var node of allCurrentNodes) {
-            var visible = true;
-            if (node.group === "commit") {
-                var commit = commitsData[node.id];
-                if (commit) {
-                    if (author && commit.author !== author) visible = false;
-                    if (dateFrom && commit.date < dateFrom) visible = false;
-                    if (dateTo && commit.date > dateTo) visible = false;
-                }
-            } else if (node.group === "collapsed") {
-                // для свёрнутых: если хотя бы один коммит в группе подходит, показываем
-                var hashes = collapsedGroups[node.id] || [node.id];
-                var anyMatch = false;
-                for (var h of hashes) {
-                    var c = commitsData[h];
-                    if (c) {
-                        if (author && c.author !== author) continue;
-                        if (dateFrom && c.date < dateFrom) continue;
-                        if (dateTo && c.date > dateTo) continue;
-                        anyMatch = true;
-                        break;
-                    }
-                }
-                visible = anyMatch;
-            }
-            nodesDataSet.update([{ id: node.id, hidden: !visible }]);
-        }
-    }
-
-    function resetFilters() {
-        document.getElementById("filterAuthor").value = "";
-        document.getElementById("filterDateFrom").value = "";
-        document.getElementById("filterDateTo").value = "";
-        applyFilters();
-    }
-
-    // Боковая панель
-    var sidebar = document.getElementById("sidebar");
+    // Обработчики событий
     document.getElementById("toggleSidebar").onclick = function() {
-        sidebar.classList.toggle("collapsed");
+        document.getElementById("sidebar").classList.toggle("collapsed");
     };
-
     document.getElementById("applyFilters").onclick = applyFilters;
     document.getElementById("resetFilters").onclick = resetFilters;
+    document.getElementById("exportPNG").onclick = exportPNG;
+    document.getElementById("clearHighlight").onclick = clearHighlight;
+    document.getElementById("confirmExpand").onclick = function() {
+        if (currentCollapsedId) { expandCollapsedNode(currentCollapsedId); document.getElementById("expandModal").style.display = "none"; }
+    };
+    document.getElementById("cancelExpand").onclick = function() { document.getElementById("expandModal").style.display = "none"; };
+    document.querySelector(".close-modal").onclick = function() { document.getElementById("expandModal").style.display = "none"; };
 
     // Запуск
     initGraph();
     renderStatistics();
+    loadState();
 </script>
 </body>
 </html>"""
-    # Замена плейсхолдеров
     html_content = html_template.replace("{{NODES_JSON}}", json.dumps(nodes_list, indent=2))
     html_content = html_content.replace("{{EDGES_JSON}}", json.dumps(edges_list, indent=2))
     html_content = html_content.replace("{{COLLAPSED_GROUPS_JSON}}", json.dumps(collapsed_groups))
@@ -711,15 +693,16 @@ def generate_html(nodes: Dict[str, dict], edges: List[tuple],
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--full', action='store_true', help='Не сворачивать цепочки')
-    parser.add_argument('--output', default='git_viz_advanced.html', help='Выходной HTML')
+    parser.add_argument('--max-commits', type=int, default=0, help='Максимальное число коммитов (0=все)')
+    parser.add_argument('--output', default='git_viz_ultimate.html', help='Выходной HTML')
     args = parser.parse_args()
 
     if not os.path.isdir('.git'):
         print("Ошибка: не найден .git")
         sys.exit(1)
 
-    print("Загрузка коммитов (это может занять время)...")
-    all_commits = get_all_commits()
+    print("Загрузка коммитов...")
+    all_commits = get_all_commits(args.max_commits)
     if not all_commits:
         print("Нет коммитов")
         return
